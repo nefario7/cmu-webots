@@ -14,6 +14,11 @@ M1-3.pdf
 M1-4.pdf
 M1-5.pdf
 M2-1.pdf
+GMT20211028-141039_Recording_1280x720.mp4
+GMT20211104-141102_Recording_1280x720.mp4
+M2-2.pdf
+M2-3.pdf
+SVD.pdf
 Nonlinear Systems and Lyapunov Stability.pdf
 PoleZero.pdf
 
@@ -30,3 +35,42 @@ Project 1/project_1_workspace.code-workspace
 
 #Project 2
 
+Project 2/P2_student/24677_2021_project_P2.pdf
+Project 2/P2_student/controllers/main/base_controller.py
+Project 2/P2_student/controllers/main/buggyTrace.csv
+Project 2/P2_student/controllers/main/evaluation.py
+Project 2/P2_student/controllers/main/main.py
+Project 2/P2_student/controllers/main/speedometer.png
+Project 2/P2_student/controllers/main/util.py
+Project 2/P2_student/controllers/main/your_controller.py
+Project 2/P2_student/controllers/main/__pycache__/Astar_main.cpython-38.pyc
+Project 2/P2_student/controllers/main/__pycache__/Astar_plan.cpython-38.pyc
+Project 2/P2_student/controllers/main/__pycache__/base_controller.cpython-38.pyc
+Project 2/P2_student/controllers/main/__pycache__/evaluation.cpython-38.pyc
+Project 2/P2_student/controllers/main/__pycache__/util.cpython-38.pyc
+Project 2/P2_student/controllers/main/__pycache__/your_controller_lqr_sol.cpython-38.pyc
+Project 2/P2_student/controllers/main/__pycache__/your_controller_pid_sol.cpython-38.pyc
+Project 2/P2_student/worlds/automotive_new.wbt
+Project 2/P2_student/worlds/Project3.wbt
+Project 2/P2_student/worlds/textures/floorTexture.jpg
+Project 2/P2_student/worlds/textures/plate.jpg
+Project 2/P2_student/worlds/textures/tesla_model3_bodywork_base_color.png
+Project 2/P2_student/worlds/textures/tesla_model3_bodywork_metallic.jpg
+Project 2/P2_student/worlds/textures/tesla_model3_bodywork_normal.jpg
+Project 2/P2_student/worlds/textures/tesla_model3_bodywork_occlusion.jpg
+Project 2/P2_student/worlds/textures/tesla_model3_bodywork_roughness.jpg
+Project 2/P2_student/worlds/textures/tesla_model3_details_base_color.jpg
+Project 2/P2_student/worlds/textures/tesla_model3_details_metallic.jpg
+Project 2/P2_student/worlds/textures/tesla_model3_details_normal.jpg
+Project 2/P2_student/worlds/textures/tesla_model3_details_occlusion.jpg
+Project 2/P2_student/worlds/textures/tesla_model3_details_roughness.png
+Project 2/P2_student/worlds/textures/tesla_model3_glass_normal.jpg
+Project 2/P2_student/worlds/textures/tesla_model3_glass_occlusion.jpg
+Project 2/P2_student/worlds/textures/tesla_model3_wheels_base_color.png
+Project 2/P2_student/worlds/textures/tesla_model3_wheels_metallic.png
+Project 2/P2_student/worlds/textures/tesla_model3_wheels_normal.jpg
+Project 2/P2_student/worlds/textures/tesla_model3_wheels_occlusion.jpg
+Project 2/P2_student/worlds/textures/tesla_model3_wheels_roughness.jpg
+Project 2/P2_student/worlds/worlds/automotive_new.wbt
+Project 2/worlds/.automotive_new.wbproj
+Project 2/worlds/.Project3.wbproj

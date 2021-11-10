@@ -1,0 +1,142 @@
+# Fill in the respective functions to implement the controller
+
+# Import libraries
+import numpy as np
+from base_controller import BaseController
+from scipy import signal, linalg
+from util import *
+
+# CustomController class (inherits from BaseController)
+class CustomController(BaseController):
+    def __init__(self, trajectory):
+
+        super().__init__(trajectory)
+
+        # Define constants
+        # These can be ignored in P1
+        self.lr = 1.39
+        self.lf = 1.55
+        self.Ca = 20000
+        self.Iz = 25854
+        self.m = 1888.6
+        self.g = 9.81
+
+        # Add additional member variables according to your need here.
+        self.ydot_last = 0
+        self.psidot_last = 0
+
+        self.ex_sum = 0
+        self.ex_last = 0
+
+        self.kpx = 50
+        self.kix = 0.1
+        self.kdx = 5
+
+    def update(self, timestep):
+
+        trajectory = self.trajectory
+
+        lr = self.lr
+        lf = self.lf
+        Ca = self.Ca
+        Iz = self.Iz
+        m = self.m
+        g = self.g
+
+        # Fetch the states from the BaseController method
+        delT, X, Y, xdot, ydot, psi, psidot = super().getStates(timestep)
+        # Design your controllers in the spaces below.
+        # Remember, your controllers will need to use the states
+        # to calculate control inputs (F, delta).
+
+        lookahead = 100
+        max_node = len(trajectory)
+
+        _, closest_idx = closestNode(X, Y, trajectory)
+        lookahead_idx = closest_idx + lookahead
+
+        X_d = trajectory[min(lookahead_idx, max_node - 1)][0]
+        Y_d = trajectory[min(lookahead_idx, max_node - 1)][1]
+        psi_d = np.arctan2(Y_d - Y, X_d - X)
+
+        distdot = np.sqrt((xdot) ** 2 + (ydot) ** 2)
+
+        # ---------------|Lateral Controller|-------------------------
+        # * Errors
+        e1 = Y - Y_d
+        e1dot = ydot
+        e2 = psi - psi_d
+        e2dot = psidot
+
+        # * State Space
+        A1 = np.zeros((4, 4))
+        A1[0, 1] = 1
+        A1[2, 3] = 1
+        A1[1, 1] = -(4 * Ca) / (m * xdot)
+        A1[1, 2] = (4 * Ca) / m
+        A1[1, 3] = -(2 * Ca * (lf - lr)) / (m * xdot)
+        A1[3, 1] = -(2 * Ca * (lf - lr)) / (Iz * xdot)
+        A1[3, 2] = (2 * Ca * (lf - lr)) / Iz
+        A1[3, 3] = -(2 * Ca * (lf ** 2 + lr ** 2)) / (Iz * xdot)
+
+        B1 = np.zeros((4, 2))
+        B1[1, 0] = (2 * Ca) / m
+        B1[3, 0] = (2 * Ca * lf) / Iz
+
+        C1 = np.zeros((2, 4))
+        C1[0, 0] = 1
+        C1[1, 3] = 1
+
+        D1 = np.zeros((2, 2))
+
+        # * Pole Placement
+        num, den = signal.ss2tf(A1, B1, C1, D1)
+        print(num, den)
+        z, p, k = signal.tf2zpk(num[0], den)
+        print("Open System Poles = ", p)
+
+        poles1 = np.array([3 + 1j, 3 - 1j, -0.01, 0])
+
+        # lateral_place = signal.place_poles(A1, B1, poles1, method="YT")
+
+        # K1 = lateral_place.gain_matrix
+        # delta = wrapToPi(-K1[0, 0] * e1 - K1[0, 1] * e1dot - K1[0, 2] * e2 - K1[0, 3] * e2dot)
+        detlta = 0
+
+        # ---------------|Longitudinal Controller|-------------------------
+        ex = np.sqrt((X_d - X) ** 2 + (Y_d - Y) ** 2)
+        # print("Longitudinal Error = {:.2f}".format(ex))
+
+        # * Pole Placement
+        # x = X
+
+        # A2 = np.zeros((2, 2))
+        # A2[0, 1] = 1
+
+        # B2 = np.zeros((2, 1))
+        # B2[1, 0] = 1 / m
+
+        # poles2 = np.array([-0.1, -4])
+        # longitudinal_place = signal.place_poles(A2, B2, poles2, method="YT")
+        # K2 = longitudinal_place.gain_matrix
+        # F = -K2[0, 0] * x - K2[0, 1] * xdot
+
+        # print("Longitudinal Error = {:.2f}".format(ex))
+
+        # * PID Controller
+        ex = np.sqrt((X_d - X) ** 2 + (Y_d - Y) ** 2)
+        ex_der = (ex - self.ex_last) / delT
+        self.ex_sum += ex * delT
+        self.ex_last = ex
+        # print(f"Longitudinal Components - P {(self.kpx * self.ex_last):.2f}, I {(self.kix * self.ex_sum):.2f}, D{(self.kdx * ex_der):.2f}")
+        F = (self.kpx * self.ex_last) + (self.kix * self.ex_sum) + (self.kdx * ex_der)
+
+        # print(f"e1 = {e1:.2f} {e1dot:.2f}, e2 = {e2:.2f} {e2dot:.2f}")
+        # print(f"Gains = {K1[0, 0]:.2f} {K1[0, 1]:.2f} {K1[0, 2]:.2f} {K1[0, 3]:.2f}")
+        # print(f"Steering = {delta:.3f}")
+
+        # print(f"x = {x:.2f} {xdot:.2f}")
+        # print(f"Gains = {K2[0, 0]:.2f} {K2[0, 1]:.2f}")
+        print(f"Force = {F:.3f}")
+
+        return X, Y, xdot, ydot, psi, psidot, F, delta

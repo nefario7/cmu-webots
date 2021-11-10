@@ -46,11 +46,11 @@ def beatBaselineGrader(timeCurrent, timeBaseline):
 
 def evaluation(minDistList, traj_, X, Y):
     print('Evaluating...')
-    timeBaseline = 300
+    timeBaseline = 350
     dt = 0.032
     Cmax_cl = 12.0           # constraint of maximum distance for completing the loop
-    Cavg = 3.0              # constraint of average distance
-    Cmax_md = 10.5           # constraint of maximun distance
+    Cavg = 4.5              # constraint of average distance
+    Cmax_md = 9.0           # constraint of maximun distance
     fs = 30.0              # the full score you can get
     traj = traj_[1:len(traj_)-60,:]
     comGrad = clGrader(traj, X, Y, fs, Cmax_cl)     # grade if you complete the loop
