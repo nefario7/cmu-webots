@@ -3,10 +3,12 @@ import numpy as np
 from heapq import heappop, heappush
 import matplotlib.pyplot as plt
 
+
 class Node(object):
     """
     Class Node: a data structure that help process calculation of AStar
     """
+
     def __init__(self, pose):
         """
         param self.pose: [x, y] index position of node
@@ -28,6 +30,7 @@ class Node(object):
     def __eq__(self, other):
         return (self.pose == other.pose).all()
 
+
 class AStar(object):
     def __init__(self, map_path):
         self.map_path = map_path
@@ -35,8 +38,8 @@ class AStar(object):
         print(self.map)
         self.resolution = 0.05
         self.y_dim = self.map.shape[0]
-        self.x_dim =self.map.shape[1]
-        print(f'map size ({self.x_dim}, {self.y_dim})')
+        self.x_dim = self.map.shape[1]
+        print(f"map size ({self.x_dim}, {self.y_dim})")
 
     def load_map(self, path):
         return np.load(path)
@@ -49,7 +52,11 @@ class AStar(object):
         TODO:
         Euclidean distance
         """
-        raise NotImplementedError
+        current = np.array((current.x, current.y))
+        goal = np.array((goal.x, goal.y))
+        distance = np.linalg.norm(current - goal)
+
+        return distance
 
     def get_successor(self, node):
         """
@@ -57,18 +64,28 @@ class AStar(object):
         :return: a list of Nodes containing successors of current Node
         """
         successor_list = []
-        x,y = node.pose  # Get x, y coordinates of the current node
-        pose_list = [[x+1, y+1], [x, y+1], [x-1, y+1], [x-1, y],
-                        [x-1, y-1], [x, y-1], [x+1, y-1], [x+1, y]]  # Pose list contains 8 neighbors of the current node
+        x, y = node.pose  # Get x, y coordinates of the current node
+        pose_list = [
+            [x + 1, y + 1],
+            [x, y + 1],
+            [x - 1, y + 1],
+            [x - 1, y],
+            [x - 1, y - 1],
+            [x, y - 1],
+            [x + 1, y - 1],
+            [x + 1, y],
+        ]  # Pose list contains 8 neighbors of the current node
 
         for pose_ in pose_list:
             x_, y_ = pose_
-            if 0 <= x_ < self.y_dim and 0 <= y_ < self.x_dim and self.map[x_, y_] == 0: # Eliminate nodes that are out of bound, and nodes that are obstacles
+            if (
+                0 <= x_ < self.y_dim and 0 <= y_ < self.x_dim and self.map[x_, y_] == 0
+            ):  # Eliminate nodes that are out of bound, and nodes that are obstacles
                 self.map[x_, y_] = -1
                 successor_list.append(Node(pose_))
-        
+
         return successor_list
-    
+
     def calculate_path(self, node):
         """
         :param node: A Node data structure
@@ -81,7 +98,7 @@ class AStar(object):
             current = current.parent
             path_ind.append(current.pose.tolist())
         path_ind.reverse()
-        print(f'path length {len(path_ind)}')
+        print(f"path length {len(path_ind)}")
         path = list(path_ind)
 
         return path
@@ -94,7 +111,7 @@ class AStar(object):
         @param goal_ind : [x, y] represents coordinates in webots world
         @return path : a list with shape (n, 2) containing n path point
         """
-       
+
         # initialize start node and goal node class
         start_node = Node(start_ind)
         goal_node = Node(goal_ind)
@@ -104,8 +121,8 @@ class AStar(object):
         (1) h can be computed by calling the heuristic method
         (2) f = g + h
         """
-        start_node.h_value = None
-        start_node.f_value = None
+        start_node.h_value = self.heuristic(start_node, goal_node)
+        start_node.f_value = start_node.g_value + start_node.h_value
         """
         END TODO
         """
@@ -122,15 +139,15 @@ class AStar(object):
 
         # while open_list is not empty
         while len(open_list):
-            
+
             """
             TODO:
             get the current node and add it to the closed list
             """
             # Current is the node in open_list that has the lowest f value
             # This operation can occur in O(1) time if open_list is a min-heap or a priority queue
-            current = None
-            closed_list = None
+            current = heappop(open_list)
+            closed_list = np.append(closed_list, current)
             """
             END TODO
             """
@@ -140,9 +157,9 @@ class AStar(object):
             # if current is goal_node: calculate the path by passing through the current node
             # exit the loop by returning the path
             if current == goal_node:
-                print('reach goal')
+                print("reach goal")
                 return self.calculate_path(current)
-            
+
             for successor in self.get_successor(current):
                 """
                 TODO:
@@ -153,10 +170,10 @@ class AStar(object):
                     (3) h(successor) can be computed by calling the heuristic method
                     (4) f(successor) = g(successor) + h(successor)
                 """
-                successor.parent = None
-                successor.g_value = None
-                successor.h_value = None
-                successor.f_value = None
+                successor.parent = current
+                successor.g_value = current.g_value + self.heuristic(current, successor)
+                successor.h_value = self.heuristic(successor, goal_node)
+                successor.f_value = successor.g_value + successor.h_value
                 """
                 END TODO
                 """
@@ -164,12 +181,12 @@ class AStar(object):
 
         # If the loop is exited without return any path
         # Path is not found
-        print('path not found')
+        print("path not found")
         return None
-    
+
     def run(self, cost_map, start_ind, goal_ind):
         if cost_map[start_ind[0], start_ind[1]] == 0 and cost_map[goal_ind[0], goal_ind[1]] == 0:
             return self.plan(start_ind, goal_ind)
 
         else:
-            print('already occupied')
+            print("already occupied")

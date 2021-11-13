@@ -29,9 +29,7 @@ class Node(object):
 
 class AStar(object):
     def __init__(self, map_path):
-        # self.map_path = map_path
         self.map_path = os.path.join(r"P3-AStar\AStar-scripts", map_path)
-
         self.map = self.load_map(self.map_path).astype(int)
         # print(self.map)
         self.resolution = 0.05
@@ -54,6 +52,12 @@ class AStar(object):
         current = np.array((current.x, current.y))
         goal = np.array((goal.x, goal.y))
         distance = np.linalg.norm(current - goal)
+
+        # dx = abs(current.x - goal.x)
+        # dy = abs(current.y - goal.y)
+        # D2 = 1.414
+        # D = 1
+        # distance = (dx + dy) - 0.586 * min(dx, dy)
         return distance
 
     def get_successor(self, node):
@@ -117,6 +121,9 @@ class AStar(object):
         open_list = []
         closed_list = np.array([])
         heappush(open_list, start_node)
+        # x = []
+        # y = []
+        # ctr = 0
 
         # while open_list is not empty
         while len(open_list):
@@ -127,6 +134,16 @@ class AStar(object):
             # Current is the node in open_list that has the lowest f value
             # This operation can occur in O(1) time if open_list is a min-heap or a priority queue
             current = heappop(open_list)
+            # x.append(current.x)
+            # y.append(current.y)
+            # ctr += 1
+            # if ctr % 25000 == 0:
+            #     plt.imshow(np.transpose(cost_map))
+            #     plt.plot(start_ind[0], start_ind[1], "x", color="r", label="start", markersize=10)
+            #     plt.plot(goal_ind[0], goal_ind[1], "o", color="r", label="goal", markersize=10)
+            #     plt.scatter(x, y, label="(" + str(x) + ", " + str(y) + ")", s=1)
+            #     plt.title("A*")
+            #     plt.show()
 
             """
             END TODO
@@ -147,7 +164,7 @@ class AStar(object):
                 TODO:
                 1. pass current node as parent of successor node
                 2. calculate g, h, and f value of successor node
-                    (1) d(current, successor) is the weight of the edge from current to successor
+                !    (1) d(current, successor) is the weight of the edge from current to successor
                     (2) g(successor) = g(current) + d(current, successor)
                     (3) h(successor) can be computed by calling the heuristic method
                     (4) f(successor) = g(successor) + h(successor)
@@ -196,9 +213,9 @@ if __name__ == "__main__":
     # costmap1 = np.genfromtxt("map1.csv", delimiter=",")
     # costmap2 = np.genfromtxt("map2.csv", delimiter=",")
     # costmap3 = np.genfromtxt("map3.csv", delimiter=",")
-    costmap1 = np.genfromtxt(r"P3-AStar\AStar-scripts\map1.csv", delimiter=",")
-    costmap2 = np.genfromtxt(r"P3-AStar\AStar-scripts\map2.csv", delimiter=",")
-    costmap3 = np.genfromtxt(r"P3-AStar\AStar-scripts\map3.csv", delimiter=",")
+    costmap1 = np.genfromtxt("P3-AStar\AStar-scripts\map1.csv", delimiter=",")
+    costmap2 = np.genfromtxt("P3-AStar\AStar-scripts\map2.csv", delimiter=",")
+    costmap3 = np.genfromtxt("P3-AStar\AStar-scripts\map3.csv", delimiter=",")
 
     # plt.imshow(np.transpose(costmap3))
     # plt.show()
@@ -210,14 +227,14 @@ if __name__ == "__main__":
     start_ind3 = [25, 100]
     goal_ind3 = [175, 100]
 
-    # Planner1 = AStar("map1.csv")
+    Planner1 = AStar("map1.csv")
     Planner2 = AStar("map2.csv")
     Planner3 = AStar("map3.csv")
 
-    # path_ind1 = Planner1.run(costmap1, start_ind1, goal_ind1)
+    path_ind1 = Planner1.run(costmap1, start_ind1, goal_ind1)
     path_ind2 = Planner2.run(costmap2, start_ind2, goal_ind2)
     path_ind3 = Planner3.run(costmap3, start_ind3, goal_ind3)
 
-    # visualize_path(costmap1, path_ind1, "A Star Planning for Costmap 1")
+    visualize_path(costmap1, path_ind1, "A Star Planning for Costmap 1")
     visualize_path(costmap2, path_ind2, "A Star Planning for Costmap 2")
     visualize_path(costmap3, path_ind3, "A Star Planning for Costmap 3")
