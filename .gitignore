@@ -22,6 +22,9 @@ SVD.pdf
 Nonlinear Systems and Lyapunov Stability.pdf
 PoleZero.pdf
 
+#Other files
+*.pyc
+
 #Project 1
 Project 1/Bicycle Model.pptx
 Project 1/Evaluation.png
@@ -45,3 +48,11 @@ Project 2/your_controller.py
 Project 2/controllers/main/__pycache__/base_controller.cpython-38.pyc
 Project 2/controllers/main/__pycache__/evaluation.cpython-38.pyc
 Project 2/controllers/main/__pycache__/util.cpython-38.pyc
+Project 2/controllers/main/__pycache__/base_controller.cpython-38.pyc
+
+#Project 3
+Project 3/Astar_script.py
+Project 3/report.pdf
+Project 3/report.pptx
+Project 3/your_controller.py
+Project 3/your_controller_lqr_astar.py
