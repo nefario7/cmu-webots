@@ -8,14 +8,14 @@ from scipy.linalg import solve_continuous_lyapunov, solve_lyapunov, solve_discre
 from math import cos, sin
 import numpy as np
 from scipy import signal
+from lqr_controller import LQR_parameters
+
 
 class AdaptiveController(BaseController):
-    """ The LQR controller class.
-
-    """
+    """The LQR controller class."""
 
     def __init__(self, robot, lossOfThurst):
-        """ MRAC adaptive controller __init__ method.
+        """MRAC adaptive controller __init__ method.
 
         Initialize parameters here.
 
@@ -55,19 +55,49 @@ class AdaptiveController(BaseController):
         self.K_ad = None
 
     def initializeGainMatrix(self):
-        """ Calculate the LQR gain matrix and matrices for adaptive controller.
-
-        """
+        """Calculate the LQR gain matrix and matrices for adaptive controller."""
 
         # ---------------|LQR Controller|-------------------------
         # Use the results of linearization to create a state-space model
 
-        n_p = 12 # number of states
-        m = 4 # number of integral error terms
+        n_p = 12  # number of states
+        m = 4  # number of integral error terms
 
         # ----------------- Your Code Here ----------------- #
         # Compute the continuous A, B, Bc, C, D and
-        # discretized A_d, B_d, Bc_d, C_d, D_d, for the computation of LQR gain 
+        # discretized A_d, B_d, Bc_d, C_d, D_d, for the computation of LQR gain
+        A = np.zeros((n_p + m, n_p + m))
+        for i in range(6):
+            A[i, 6 + i] = 1
+        A[n_p - 6, 4] = self.g
+        A[n_p - 5, 3] = -self.g
+        A[n_p + m - 4, 0] = 1
+        A[n_p + m - 3, 1] = 1
+        A[n_p + m - 2, 2] = 1
+        A[n_p + m - 1, 5] = 1
+
+        B = np.zeros((n_p + m, m))
+        B[n_p - 4, 0] = 1 / self.m
+        B[n_p - 3, 1] = 1 / self.Ix
+        B[n_p - 2, 2] = 1 / self.Iy
+        B[n_p - 1, 3] = 1 / self.Iz
+        B[n_p : n_p + m, :] = -np.eye(m)
+
+        C = np.zeros((m, n_p + m))
+        C[0, 0] = 1
+        C[1, 1] = 1
+        C[2, 2] = 1
+        C[3, 5] = 1
+
+        D = np.zeros((m, m))
+
+        Bc = np.vstack((np.zeros((n_p, m)), -np.eye(m)))
+
+        discrete_system = signal.cont2discrete((A, B, C, D), self.delT)
+        discrete_system_c = signal.cont2discrete((A, Bc, C, D), self.delT)
+        A_d = discrete_system[0]
+        B_d = discrete_system[1]
+        Bc_d = discrete_system_c[1]
 
         # ----------------- Your Code Ends Here ----------------- #
 
@@ -82,7 +112,7 @@ class AdaptiveController(BaseController):
         # max_ang = 0.2 * self.pi
         # max_vel = 6.0
         # max_rate = 0.015 * self.pi
-        # max_eyI = 3. 
+        # max_eyI = 3.
 
         # max_states = np.array([0.1 * max_pos, 0.1 * max_pos, max_pos,
         #                     max_ang, max_ang, max_ang,
@@ -99,10 +129,11 @@ class AdaptiveController(BaseController):
         # Come up with reasonable values for Q and R (state and control weights)
         # The example code above is a good starting point, feel free to use them or write you own.
         # Tune them to get the better performance
+        Q, R = LQR_parameters(self.pi, self.U1_max)
 
         # ----------------- Your Code Ends Here ----------------- #
 
-        # solve for LQR gains   
+        # solve for LQR gains
         [K, _, _] = dlqr(A_d, B_d, Q, R)
         self.Kbl = -K
 
@@ -123,7 +154,13 @@ class AdaptiveController(BaseController):
         # ----------------- Your Code Here ----------------- #
         # Come up with reasonable value for Gamma matrix and Q_lyap
         # The example code above is a good starting point, feel free to use them or write you own.
-        # Tune them to get the better performance        
+        # Tune them to get the better performance
+        self.Gamma = 3e-4 * np.eye(16)
+
+        Q_lyap = np.copy(Q)
+        Q_lyap[0:3, 0:3] *= 30
+        Q_lyap[6:9, 6:9] *= 250
+        Q_lyap[14, 14] *= 2e-3
 
         # ----------------- Your Code Ends Here ----------------- #
 
@@ -131,7 +168,7 @@ class AdaptiveController(BaseController):
         self.P = solve_continuous_lyapunov(A_m.T, -Q_lyap)
 
     def update(self, r):
-        """ Get current states and calculate desired control input.
+        """Get current states and calculate desired control input.
 
         Args:
             r (np.array): reference trajectory.
@@ -142,19 +179,19 @@ class AdaptiveController(BaseController):
 
         """
 
-        U = np.array([0.0, 0.0, 0.0, 0.0]).reshape(-1,1)
+        U = np.array([0.0, 0.0, 0.0, 0.0]).reshape(-1, 1)
 
         # Fetch the states from the BaseController method
         x_t = super().getStates()
 
         # update integral term
-        self.int_e1 += float((x_t[0]-r[0])*(self.delT))
-        self.int_e2 += float((x_t[1]-r[1])*(self.delT))
-        self.int_e3 += float((x_t[2]-r[2])*(self.delT))
-        self.int_e4 += float((x_t[5]-r[3])*(self.delT))
+        self.int_e1 += float((x_t[0] - r[0]) * (self.delT))
+        self.int_e2 += float((x_t[1] - r[1]) * (self.delT))
+        self.int_e3 += float((x_t[2] - r[2]) * (self.delT))
+        self.int_e4 += float((x_t[5] - r[3]) * (self.delT))
 
         # Assemble error-based states into array
-        error_state = np.array([self.int_e1, self.int_e2, self.int_e3, self.int_e4]).reshape((-1,1))
+        error_state = np.array([self.int_e1, self.int_e2, self.int_e3, self.int_e4]).reshape((-1, 1))
         states = np.concatenate((x_t, error_state))
 
         # initialize adaptive controller
@@ -165,13 +202,15 @@ class AdaptiveController(BaseController):
         else:
             # ----------------- Your Code Here ----------------- #
             # adaptive controller update law
-            # Update self.K_ad by first order approximation: 
-            # self.K_ad = self.K_ad + rate_of_change * self.delT
+            # Update self.K_ad by first order approximation:
+            error = states - self.x_m
+            rate_of_change = -self.Gamma @ states @ error.T @ self.P @ self.B
+            self.K_ad = self.K_ad + rate_of_change * self.delT
 
             # ----------------- Your Code Ends Here ----------------- #
-            
+
             # compute x_m at k+1
-            self.x_m = self.A_d @ self.x_m + self.B_d @ self.Kbl @ self.x_m + self.Bc_d @ r 
+            self.x_m = self.A_d @ self.x_m + self.B_d @ self.Kbl @ self.x_m + self.Bc_d @ r
             # Compute control input
             U = self.K_ad.T @ states
 

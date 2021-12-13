@@ -10,6 +10,41 @@ import numpy as np
 from scipy import signal
 
 
+def LQR_parameters(pi, U1_max):
+    max_pos = 15.0
+    max_ang = 0.5 * pi
+    max_vel = 6.0
+    max_rate = 0.015 * pi
+    max_eyI = 2.0
+
+    max_states = np.array(
+        [
+            max_pos,
+            max_pos,
+            0.05 * max_pos,
+            0.5 * max_ang,
+            0.5 * max_ang,
+            max_ang,
+            0.5 * max_vel,
+            0.5 * max_vel,
+            0.2 * max_vel,
+            max_rate,
+            max_rate,
+            max_rate,
+            max_eyI,
+            max_eyI,
+            0.5 * max_eyI,
+            0.1 * max_eyI,
+        ]
+    )
+
+    max_inputs = np.array([0.1 * U1_max, U1_max, U1_max, U1_max])
+
+    Q = np.diag(1 / max_states ** 2)
+    R = np.diag(1 / max_inputs ** 2)
+    return Q, R
+
+
 class LQRController(BaseController):
     """The LQR controller class."""
 
@@ -99,37 +134,7 @@ class LQRController(BaseController):
         # Come up with reasonable values for Q and R (state and control weights)
         # The example code above is a good starting point, feel free to use them or write you own.
         # Tune them to get the better performance
-        max_pos = 15.0
-        max_ang = 0.5 * self.pi
-        max_vel = 6.0
-        max_rate = 0.015 * self.pi
-        max_eyI = 2.0
-
-        max_states = np.array(
-            [
-                max_pos,
-                max_pos,
-                0.05 * max_pos,
-                0.5 * max_ang,
-                0.5 * max_ang,
-                max_ang,
-                0.5 * max_vel,
-                0.5 * max_vel,
-                0.2 * max_vel,
-                max_rate,
-                max_rate,
-                max_rate,
-                max_eyI,
-                max_eyI,
-                0.5 * max_eyI,
-                0.1 * max_eyI,
-            ]
-        )
-
-        max_inputs = np.array([0.1 * self.U1_max, self.U1_max, self.U1_max, self.U1_max])
-
-        Q = np.diag(1 / max_states ** 2)
-        R = np.diag(1 / max_inputs ** 2)
+        Q, R = LQR_parameters(self.pi, self.U1_max)
 
         # ----------------- Your Code Ends Here ----------------- #
 

@@ -21,11 +21,11 @@ driver = Robot()
 timestep = int(driver.getBasicTimeStep())
 
 # Set your percent loss of thrust
-lossOfThust = 0.56
+lossOfThust = 0.7
 
 # Instantiate controller and start sensors
-customController = LQRController(driver, lossOfThust)
-# customController = AdaptiveController(driver, lossOfThust)
+# customController = LQRController(driver, lossOfThust)
+customController = AdaptiveController(driver, lossOfThust)
 customController.initializeMotors()
 customController.startSensors(timestep)
 
@@ -48,6 +48,7 @@ while driver.step(timestep) != -1:
     # motor failure after 14 s
     if current_time > 14 and not motor_failure:
         print("--- Motor Failure ---")
+        print("@Time:", current_time)
         motor_failure = True
 
     # reference trajectory

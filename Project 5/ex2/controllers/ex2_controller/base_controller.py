@@ -1,13 +1,12 @@
 from controller import GPS, Gyro, InertialUnit, Robot
 import numpy as np
 
-class BaseController():
-    """ The base controller class.
 
-    """
+class BaseController:
+    """The base controller class."""
 
-    def __init__(self, robot, lossOfThrust = 0):
-        """ Base controller __init__ method.
+    def __init__(self, robot, lossOfThrust=0):
+        """Base controller __init__ method.
 
         Initialize drone parameters here.
 
@@ -20,7 +19,7 @@ class BaseController():
         # Initialize variables
         self.robot = robot
         self.timestep = 0
-        self.delT = 0.
+        self.delT = 0.0
 
         # intializa percent loss of thrust
         self.lossOfThrust = lossOfThrust
@@ -43,11 +42,14 @@ class BaseController():
         self.pi = 3.1415926535
 
         # define H matrix for conversion from control input U to motor speeds
-        self.H_inv = self.ct*np.array([[1, 1, 1, 1],
-                                    [self.d1y, -self.d1y, self.d2y, -self.d2y],
-                                    [-self.d1x, -self.d1x, self.d2x, self.d2x],
-                                    [-self.ctau/self.ct, self.ctau/self.ct, self.ctau/self.ct, -self.ctau/self.ct]
-                                    ])
+        self.H_inv = self.ct * np.array(
+            [
+                [1, 1, 1, 1],
+                [self.d1y, -self.d1y, self.d2y, -self.d2y],
+                [-self.d1x, -self.d1x, self.d2x, self.d2x],
+                [-self.ctau / self.ct, self.ctau / self.ct, self.ctau / self.ct, -self.ctau / self.ct],
+            ]
+        )
         self.H = np.linalg.inv(self.H_inv)
 
         # define variables for speed calculations
@@ -56,13 +58,13 @@ class BaseController():
         self.zGPS_old = 0.099019
 
     def startSensors(self, timestep):
-        """ Start sensors.
+        """Start sensors.
 
         Instantiate objects and start up GPS, Gyro, IMU sensors.
 
         For more details, refer to the Webots documentation.
 
-        Args: 
+        Args:
             timestep (int): time step of the current world.
 
         """
@@ -76,19 +78,19 @@ class BaseController():
         self.imu.enable(timestep)
 
         self.timestep = timestep
-        self.delT = 1e-3*self.timestep
+        self.delT = 1e-3 * self.timestep
 
     def getStates(self):
-        """ Get drone state.
+        """Get drone state.
 
         The state of drone is 16 dimensional:
 
-        xGPS, yGPS, zGPS, 
-        roll, pitch, yaw, 
+        xGPS, yGPS, zGPS,
+        roll, pitch, yaw,
         x_vel, y_vel, z_vel,
         roll_rate, pitch_rate, yaw_rate
 
-        Returns: 
+        Returns:
             np.array: x_t. information of 12 states.
 
         """
@@ -100,54 +102,52 @@ class BaseController():
 
         # Find the rate of change in each axis, and store the current value of (X, Y, Z)
         # as previous (X, Y, Z) which will be used in the next call
-        x_vel = (xGPS - self.xGPS_old)/self.delT
-        y_vel = (yGPS - self.yGPS_old)/self.delT
-        z_vel = (zGPS - self.zGPS_old)/self.delT
+        x_vel = (xGPS - self.xGPS_old) / self.delT
+        y_vel = (yGPS - self.yGPS_old) / self.delT
+        z_vel = (zGPS - self.zGPS_old) / self.delT
 
         self.xGPS_old = xGPS
         self.yGPS_old = yGPS
         self.zGPS_old = zGPS
 
         # Extract (roll, pitch, yaw) angle from imu
-        roll = self.imu.getRollPitchYaw()[0] 
+        roll = self.imu.getRollPitchYaw()[0]
         pitch = -self.imu.getRollPitchYaw()[1]
         yaw = self.imu.getRollPitchYaw()[2]
 
         # Extract (roll rate, pitch rate, yaw rate) angular velocity from imu
         roll_rate = self.gyro.getValues()[0]
-        pitch_rate = -self.gyro.getValues()[2] 
+        pitch_rate = -self.gyro.getValues()[2]
         yaw_rate = self.gyro.getValues()[1]
 
-        x_t = np.array([xGPS, yGPS, zGPS, roll, pitch, yaw, x_vel, y_vel, z_vel, roll_rate, pitch_rate, yaw_rate]).reshape(-1,1)
+        x_t = np.array([xGPS, yGPS, zGPS, roll, pitch, yaw, x_vel, y_vel, z_vel, roll_rate, pitch_rate, yaw_rate]).reshape(-1, 1)
 
         return x_t
 
     def getMotorAll(self):
-        """ Get each motors' controller.
+        """Get each motors' controller.
 
         Returns:
             list: Each motor's controller.
 
         """
-        frontLeftMotor = self.robot.getMotor('front left propeller')
-        frontRightMotor = self.robot.getMotor('front right propeller')
-        backLeftMotor = self.robot.getMotor('rear left propeller')
-        backRightMotor = self.robot.getMotor('rear right propeller')
+        frontLeftMotor = self.robot.getDevice("front left propeller")
+        frontRightMotor = self.robot.getDevice("front right propeller")
+        backLeftMotor = self.robot.getDevice("rear left propeller")
+        backRightMotor = self.robot.getDevice("rear right propeller")
         return [frontLeftMotor, frontRightMotor, backLeftMotor, backRightMotor]
 
     def initializeMotors(self):
-        """ Initialisze all motors speed to 0.
-
-        """
+        """Initialisze all motors speed to 0."""
         [frontLeftMotor, frontRightMotor, backLeftMotor, backRightMotor] = self.getMotorAll()
-        frontLeftMotor.setPosition(float('inf'))
-        frontRightMotor.setPosition(float('inf'))
-        backLeftMotor.setPosition(float('inf'))
-        backRightMotor.setPosition(float('inf'))
+        frontLeftMotor.setPosition(float("inf"))
+        frontRightMotor.setPosition(float("inf"))
+        backLeftMotor.setPosition(float("inf"))
+        backRightMotor.setPosition(float("inf"))
         self.motorsSpeed(0, 0, 0, 0)
 
     def motorsSpeed(self, v1, v2, v3, v4):
-        """ Set each motors' speed.
+        """Set each motors' speed.
 
         Args:
             v1, v2, v3, v4 (int): desired speed for each motor.
@@ -160,7 +160,7 @@ class BaseController():
         backRightMotor.setVelocity(v4)
 
     def convertUtoMotorSpeed(self, U):
-        """ Convert control input to motor speed.
+        """Convert control input to motor speed.
 
         Args:
             U (np.array): desired control input.
@@ -169,12 +169,12 @@ class BaseController():
             np.array: rotorspeed. Desired rotor speed.
 
         """
-        w_squre = np.clip(np.matmul(self.H, U), 0, 576**2)
+        w_squre = np.clip(np.matmul(self.H, U), 0, 576 ** 2)
         rotorspeed = np.sqrt(w_squre.flatten())
         return rotorspeed
 
     def setMotorsSpeed(self, motorspeed, motor_failure=0):
-        """ Set motor speed.
+        """Set motor speed.
 
         Args:
             motorspeed (np.array): desired motor speed.
@@ -182,7 +182,6 @@ class BaseController():
 
         """
         if motor_failure:
-            print("--- Motor Failure ---")
             factor = np.sqrt(1 - self.lossOfThrust)
             self.motorsSpeed(float(motorspeed[0]) * factor, float(-motorspeed[1]), float(-motorspeed[2]), float(motorspeed[3]))
         else:
